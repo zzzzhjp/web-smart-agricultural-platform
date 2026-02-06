@@ -1,5 +1,5 @@
 import * as Cesium from 'cesium'
-// import type { PositionOptions, ModelOptions } from '@/interface'
+import type { PositionOptions, ModelOptions } from '@/interface'
 
 export function initCesium(containerId: string): Cesium.Viewer {
     const Viewer = new Cesium.Viewer(containerId, {
@@ -31,6 +31,17 @@ export function initCesium(containerId: string): Cesium.Viewer {
 }
 
 //锁定视角
+export function lockPosition(viewer: Cesium.Viewer, positionOptions: PositionOptions): void {
+    const { lon, lat, height = 0, heading = 0, pitch = -30, range = 2000 } = positionOptions
+    viewer.camera.lookAt(
+        Cesium.Cartesian3.fromDegrees(lon, lat, height),
+        new Cesium.HeadingPitchRange(
+            Cesium.Math.toRadians(heading),
+            Cesium.Math.toRadians(pitch),
+            range,
+        )
+    )
+}
 
 
 // 监听底图加载完成

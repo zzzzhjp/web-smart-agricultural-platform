@@ -2,7 +2,10 @@ import { createApp } from 'vue'
 import './style.css'
 import App from './App.vue'
 import router from './routers/index.ts'
+
+//cesium
 import * as Cesium from 'cesium'
+import 'cesium/Build/Cesium/Widgets/widgets.css'
 import type { MonitorInfo } from './interface/index.ts'
 import { CESIUM_ACCESS_TOKEN, CESIUM_BASE_URL } from './configs/CesiumBase.ts'
 
@@ -28,4 +31,11 @@ declare module 'cesium' {
 window.CESIUM_BASE_URL = CESIUM_BASE_URL
 Cesium.Ion.defaultAccessToken = CESIUM_ACCESS_TOKEN
 
-createApp(App).use(router).mount('#app')
+//element-plus
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css'
+
+createApp(App)
+    .use(router)
+    .use(ElementPlus)
+    .mount('#app')
