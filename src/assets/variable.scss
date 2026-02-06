@@ -1,0 +1,77 @@
+// 主题色系
+$color-bg-nav: linear-gradient(to right, #023E1B, #0A5F3B); // 顶部导航栏渐变背景
+$color-border-card: #00A2E8; // 卡片边框色（青色）
+$color-bg-card: #1b384d8c; // 卡片背景色（深灰蓝）
+$color-text-primary: #D0D0D0; // 主要文字色（数据、标题）
+$color-text-secondary: #808080; // 次要文字色（单位、说明）
+
+// 数据项图标色
+$color-block-geo: #0C5D9A; // 地块数图标背景（深蓝）
+$color-block-user: #0D4D8B; // 用户数图标背景（深蓝）
+$color-block-scheme: #0D4D8B; // 方案数图标背景（深蓝）
+
+// 图表色（作物种植面积饼图）
+$color-crop-corn: #39D18A; // 玉米
+$color-crop-wheat: #59D0F8; // 小麦
+$color-crop-soy: #FAD050; // 大豆
+$color-crop-potato: #F8A352; // 土豆
+$color-crop-rice: #EC6F70; // 水稻
+$color-crop-other: #A6A9B1; // 其他
+
+// 右侧卡片辅助色
+$color-title-line: #40E0D0; // 卡片标题上划线（青色）
+$color-warning-bg: #FF5733; // 预警背景（红色）
+$color-warning-text: #FFFFFF; // 预警文字色
+
+// 地图覆盖物色
+$color-map-polygon-1: #FFA500; // 橙色地块
+$color-map-polygon-2: #00A2E8; // 青色地块
+
+// 输入框/按钮色
+$color-input-bg: #205371; // 输入框背景
+$color-input-text: #D0D0D0; // 输入框文字
+$color-btn-bg: #00A2E8; // 按钮背景
+$color-btn-hover-bg: darken($color-btn-bg, 10%); // 按钮悬停背景
+
+
+// 字体家族
+$font-family: 'PingFang SC', 'Helvetica Neue', sans-serif;
+
+// 字号分级
+$font-size-title: 24px; // 顶部大标题
+$font-size-subtitle: 18px; // 板块子标题（数据总览、农资使用等）
+$font-size-data-lg: 28px; // 数据项大数字（120、80等）
+$font-size-text: 16px; // 普通文字（数据说明、表格内容）
+$font-size-content: 14px; // 辅助文字（单位、小字说明）
+
+// 行高（保证垂直居中）
+$line-height-data: 32px; // 数据项数字行高
+$line-height-text: 24px; // 普通文字行高
+
+
+// 间距系统（保证网格对齐）
+$spacing-card: 20px; // 卡片外间距
+$padding-card: 15px; // 卡片内边距
+$padding-content: 10px; // 内容块内边距
+
+// 圆角与边框
+$border-radius: 5px; // 元素圆角半径
+$border-width: 1px; // 卡片边框宽度
+$border-width-btn: 2px; // 按钮边框宽度
+
+
+
+// 阴影效果
+$shadow-card: 0 2px 10px rgba(0, 0, 0, 0.2); // 卡片阴影
+$shadow-hover: 0 4px 15px rgba(0, 0, 0, 0.3); // 悬停阴影
+
+// 透明度
+$opacity-hover: 0.9; // 元素悬停透明度
+
+
+// 地图相关
+$map-zoom-level: 53%; // 地图初始缩放比例（根据UI中的65%+85%调整）
+$map-controls-color: #D0D0D0; // 地图控件（+-1:1还原）文字色
+
+// 表格布局
+$table-border-color: rgba(255, 255, 255, 0.1); // 表格边框色（透明浅灰）

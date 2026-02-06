@@ -1,7 +1,10 @@
 import { createApp } from 'vue'
-import './style.css'
+import '@assets/main.css'
 import App from './App.vue'
 import router from './routers/index.ts'
+
+//scss
+import '@assets/variable.scss'
 
 //cesium
 import * as Cesium from 'cesium'

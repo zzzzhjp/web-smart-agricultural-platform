@@ -65,3 +65,19 @@ export type Route = {
     latitude: number
     height: number
 }
+
+export interface Weather {
+    name: string
+    value: string
+    id: number
+}
+
+export interface Greenhouse {
+    name: string
+    value: string
+    id: number
+}
+
+export interface Alarm {
+    value: string
+}

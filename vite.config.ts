@@ -22,7 +22,8 @@ export default defineConfig({
       '@components': resolve(__dirname, './src/components'),
       '@views': resolve(__dirname, './src/views'),
       '@utils': resolve(__dirname, './src/utils'),
-      '@interface': resolve(__dirname, './src/interface')
+      '@interface': resolve(__dirname, './src/interface'),
+      '@assets': resolve(__dirname, './src/assets'),
     }
   }
 })

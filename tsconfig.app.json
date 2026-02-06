@@ -30,6 +30,9 @@
       ],
       "@interface/*": [
         "./src/nterface/*"
+      ],
+      "@assets/*": [
+        "./src/assets/*"
       ]
     }
   },
