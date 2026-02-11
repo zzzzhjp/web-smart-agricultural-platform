@@ -1,7 +1,28 @@
 <template>
     <div id="map" v-loading="loading"></div>
     <HeaderCom title="智慧农业可视化平台"></HeaderCom>
-    <el-dialog ></el-dialog>
+    <el-dialog class="monitor" v-model="dialogVisible" :title="monitorName" width="600">
+        <ul class="monitor-infos">
+            <li class="monitor-infos-item" v-for="item in monitorInfos" :key="item.key">
+                <div class="monitor-infos-main">
+                    <div class="monitor-infors-img">{{ item.key }}</div>
+                    <div class="monitor-infos-content">
+                        <p>{{ item.label }}</p>
+                        <p>{{ item.value }}{{ item.unit }}</p>
+                    </div>
+                </div>
+                <el-slider
+                    class="monitor-infos-range"
+                    :class="{ 'is-danger': outSoilRange(item.value, item.key)}"
+                    :model-value="clampedValue(item.value, item.key)"
+                    disabled
+                    :show-tooltip="false"
+                    :min="minSoilRange(item.key)"
+                    :max="maxSoilRange(item.key)"
+                ></el-slider>
+            </li>
+        </ul>
+    </el-dialog>
 
     //侧边展示栏
     <div class="chart-aside" style="left: 1vw">
@@ -13,7 +34,7 @@
                     :key="item.id"
                     class="weather-item"
                 >
-                    <img src="" alt="">
+                    <img :src="leaf" alt="">
                     <span>{{ item.name }}</span>
                     <span>{{ item.value }}</span>
                 </div>
@@ -23,7 +44,7 @@
             <div class="chart-title">温室大棚</div>
             <div class="greenhouse">
                 <div v-for="item in GREENHOUSE" :key="item.id" class="greenhouse-item">
-                    <img src="" alt="" />
+                    <img :src="leaf" alt="" />
                     <span>{{ item.name }}</span>
                     <span>{{ item.value }}</span>
                 </div>
@@ -41,15 +62,15 @@
             <div class="chart-title">无人机情况</div>
             <div class="drone">
                 <div class="drone-item">
-                <img src="" alt="" />
+                <img :src="irrigate" alt="" />
                 当前无人机：{{ DRONE.isFlyOpen ? '启动' : '关闭' }}
                 </div>
                 <div class="drone-item">
-                <img src="" alt="" />
+                <img :src="monitor" alt="" />
                 当前喷洒农药：{{ DRONE.isPesticideOpen ? '启动' : '关闭' }}
                 </div>
                 <div class="drone-item">
-                <img src="" alt="" />
+                <img :src="moist" alt="" />
                 大约剩余时间：{{ DRONE.remainingTime }}
                 </div>
             </div>
@@ -73,10 +94,20 @@
 import * as Cesium from 'cesium'
 import { onMounted, ref , reactive} from 'vue';
 
-//工具和设置
-import { lockPosition, mapLoaded ,initCesium } from '@/utils';
-import { FARM } from '@/configs/Farm';
+//api
+import { getMonitors } from '@/api';
 
+//工具和设置
+import { 
+    lockPosition, 
+    mapLoaded,
+    initCesium, 
+    expandRange, 
+    loadModel,
+    tooltip,
+} from '@/utils';
+
+import { FARM , SOIL_RANGE} from '@/configs/Farm';
 import { WEATHER } from '@/configs/Weather';
 import { GREENHOUSE } from '@/configs/Greenhouse';
 import { ALARM } from '@/configs/Alarm';
@@ -87,11 +118,198 @@ import { PRODUC } from '@/configs/Product';
 import HeaderCom from '@/components/HeaderCom.vue';
 import CropArea from '@/components/CropArea.vue';
 
+//png
+import fence from '@/assets/images/fence.png'
+import leaf from '@/assets/images/leaf.png'
+import irrigate from '@/assets/images/irrigate.png'
+import moist from '@/assets/images/moist.png'
+import monitor from '@/assets/images/monitor.png'
+import smoke from '@/assets/images/smoke.png'
+import type { Monitor , MonitorInfo} from '@/interface';
+import router from '@/routers';
+
 
 let viewer: Cesium.Viewer
 const loading = ref(false)
+const dialogVisible = ref(false)
+const monitorName = ref('')
+const monitorInfos = ref<MonitorInfo[]>([])
 
 const cropArea = reactive<Record<string, number>>({})
+
+//设置围墙
+function setWallEntity(){
+    const height = 50
+    const wall: number[] = []
+    for(let i = 0; i < FARM.range.length ; i += 2){
+        wall.push(FARM.range[i] ?? 0 , FARM.range[i + 1] ?? 0 , height)
+    }
+    wall.push(FARM.range[0] ?? 0 , FARM.range[1] ?? 0 , height)
+    // console.log(wall);
+    viewer.entities.add({
+        wall: {
+            positions: Cesium.Cartesian3.fromDegreesArrayHeights(wall),
+            material: new Cesium.ImageMaterialProperty({
+                image: fence,
+                transparent: true,
+                repeat: new Cesium.Cartesian2(30.0, 1.0),
+                color: Cesium.Color.WHITE.withAlpha(0.8),
+            })
+        }
+    })
+}
+
+//显示农场范围
+function showFarmRange(){
+    const outRange = expandRange(FARM.range, 3)
+    viewer.entities.add({
+        polygon: {
+            hierarchy: {
+                positions: Cesium.Cartesian3.fromDegreesArray(outRange),
+                holes: [
+                    {
+                        positions: Cesium.Cartesian3.fromDegreesArray(FARM.range),
+                        holes: [],
+                    }
+                ]
+            },
+            material: Cesium.Color.fromCssColorString('#081c2c').withAlpha(0.5)
+        }
+    })
+}
+
+
+//添加温室模型
+function greenhouseModel(){
+    FARM.greenhouse.forEach((item)=>{
+        loadModel(viewer,{
+            url: '/models/greenhouse.glb',
+            lon: item.lon,
+            lat: item.lat,
+            heading: 45,
+            scale: 100
+        })
+    })
+}
+
+//加载监控模型
+function monitorModel() {
+    getMonitors().then((res:Monitor[])=>{
+        res.forEach((item)=>{
+            loadModel(viewer,
+                {
+                    url: 'models/monitor.glb',
+                    lon: item.lon,
+                    lat: item.lat,
+                    heading: -45,
+                    scale: 30,
+                    height: -8
+                },
+                (entity) => {
+                    if (entity.model) {
+                        const monitorStatusColor =
+                        FARM.monitorStatus.find((monitor) => monitor.status === item.status)?.color ||
+                        Cesium.Color.WHITE
+                        const monitorStatusTitle =
+                        FARM.monitorStatus.find((monitor) => monitor.status === item.status)?.title || ''
+                        const monitorIsDialog =
+                        FARM.monitorStatus.find((monitor) => monitor.status === item.status)?.isDialog ||
+                        false
+
+                        entity.model.silhouetteColor = new Cesium.ConstantProperty(monitorStatusColor)
+                        entity.model.silhouetteSize = new Cesium.ConstantProperty(1)
+                        entity.monitorStatusTitle = monitorStatusTitle
+                        entity.monitorIsDialog = monitorIsDialog
+                        entity.monitorName = item.name
+                        entity.monitorInfos = item.infos
+                    }
+                }
+            )
+        })
+    })
+}
+
+function minSoilRange(key: string):number {
+    const ret = SOIL_RANGE.find((item) => {
+        item.key === key
+    })
+    
+    return ret?.range[0] ?? 0
+}
+
+function maxSoilRange(key:string):number {
+    const ret = SOIL_RANGE.find((item) => {
+        item.key === key
+    })
+    
+    return ret?.range[1] ?? 0
+}
+
+function outSoilRange( value:number ,key:string): boolean{
+    const min = minSoilRange(key)
+    const max = maxSoilRange(key)
+    return value < min || value > max
+}
+
+function clampedValue(value:number , key:string): number{
+    const min = minSoilRange(key)
+    const max = maxSoilRange(key)
+    return Math.max(min , Math.min(max, value))
+}
+
+//鼠标移入
+function toMouseMove(){
+    const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas)
+    handler.setInputAction((e:Cesium.ScreenSpaceEventHandler.MotionEvent)=>{
+        const pick = viewer.scene.pick(e.endPosition)
+        const tooltipTitle = pick?.id?.monitorStatusTitle || pick?.id?.cropBillboardTitle
+        const areaEntity = pick?.id?.areaEntity
+
+        if(areaEntity){
+            areaEntity.polygon.material = new Cesium.ColorMaterialProperty(
+                Cesium.Color.fromCssColorString(areaEntity.areaColor).withAlpha(0.7)
+            )
+        }else{
+            viewer.entities.values.forEach((entity)=>{
+                if(entity.areaColor && entity.polygon) {
+                    entity.polygon.material = new Cesium.ColorMaterialProperty(
+                        Cesium.Color.fromCssColorString(entity.areaColor).withAlpha(0.3)
+                    )
+                }
+            })
+        }
+
+        if(tooltipTitle) {
+            tooltip.show(e.endPosition.x, e.endPosition.y, tooltipTitle)
+            viewer.canvas.style.cursor = 'pointer'
+        } else {
+            tooltip.hide()
+            viewer.canvas.style.cursor = 'default'
+        }
+    },Cesium.ScreenSpaceEventType.MOUSE_MOVE)
+}
+
+function toDubleClick() {
+    viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(
+        Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK
+    )
+    const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas)
+    handler.setInputAction((e: Cesium.ScreenSpaceEventHandler.PositionedEvent)=>{
+        const pick = viewer.scene.pick(e.position)
+        const monitorIsDialog = pick?.id?.monitorIsDialog
+        const cropId = pick?.id?.cropId
+
+        if(cropId){
+            router.push(`/detail/${cropId}`)
+        }
+
+        if(monitorIsDialog){
+            dialogVisible.value = true
+            monitorName.value = pick.id.monitorName
+            monitorInfos.value = pick.id.monitorInfos
+        }
+    },Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK)
+}
 
 onMounted(()=>{
     viewer = initCesium('map')
@@ -105,6 +323,13 @@ onMounted(()=>{
     mapLoaded(viewer, () => {
         loading.value = false
   })
+
+  setWallEntity()
+  showFarmRange()
+  greenhouseModel()
+  monitorModel()
+  toMouseMove()
+  toDubleClick()
 })
 
 </script>
@@ -167,5 +392,20 @@ onMounted(()=>{
   padding: 0.4vw;
   background-color: #137e5a2c;
   border-radius: 0.4vw;
+}
+
+.drone {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  height: calc(100% - 2vw);
+}
+.drone-item {
+  display: flex;
+  align-items: center;
+}
+.cropArea,
+.producHistory {
+  height: calc(100% - 2vw);
 }
 </style>

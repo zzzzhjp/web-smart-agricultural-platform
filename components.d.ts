@@ -14,6 +14,7 @@ declare module 'vue' {
     Card: typeof import('./src/components/Card.vue')['default']
     CropArea: typeof import('./src/components/CropArea.vue')['default']
     ElDialog: typeof import('element-plus/es')['ElDialog']
+    ElSlider: typeof import('element-plus/es')['ElSlider']
     HeaderCom: typeof import('./src/components/HeaderCom.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
