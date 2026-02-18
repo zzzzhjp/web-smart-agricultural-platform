@@ -7,3 +7,11 @@ export const getMonitors = async () => {
     }
     return res.json()
 }
+
+export const getCrops = async () => {
+    const res = await fetch(`${host}/crops`)
+    if (!res.ok) {
+        throw new Error('error to get crops')
+    }
+    return res.json()
+}

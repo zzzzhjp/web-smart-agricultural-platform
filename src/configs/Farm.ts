@@ -1,5 +1,10 @@
 import * as Cesium from 'cesium'
 
+//导入图片
+import apple from '@/assets/images/apple.png'
+import grape from '@/assets/images/grape.png'
+import strawberry from '@/assets/images/strawberry.png'
+
 export const FARM = {
     lon: 117.237599,
     lat: 38.469119,
@@ -15,6 +20,11 @@ export const FARM = {
         { status: 0, color: Cesium.Color.GREEN, title: '双击弹出信息', isDialog: true },
         { status: 1, color: Cesium.Color.BLUE, title: '当前设备在维修', isDialog: false },
         { status: 2, color: Cesium.Color.RED, title: '当前设备已故障', isDialog: false },
+    ],
+    cropType: [
+        { type: 'apple', height: 80, img: apple, color: '#e74c3c' },
+        { type: 'grape', height: 80, img: grape, color: '#8e44ad' },
+        { type: 'strawberry', height: 180, img: strawberry, color: '#ff6b81' },
     ]
 }
 

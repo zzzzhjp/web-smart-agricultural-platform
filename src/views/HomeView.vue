@@ -95,7 +95,7 @@ import * as Cesium from 'cesium'
 import { onMounted, ref , reactive} from 'vue';
 
 //api
-import { getMonitors } from '@/api';
+import { getMonitors , getCrops } from '@/api';
 
 //工具和设置
 import { 
@@ -125,7 +125,7 @@ import irrigate from '@/assets/images/irrigate.png'
 import moist from '@/assets/images/moist.png'
 import monitor from '@/assets/images/monitor.png'
 import smoke from '@/assets/images/smoke.png'
-import type { Monitor , MonitorInfo} from '@/interface';
+import type { Crop, Monitor , MonitorInfo} from '@/interface';
 import router from '@/routers';
 
 
@@ -289,7 +289,9 @@ function toMouseMove(){
     },Cesium.ScreenSpaceEventType.MOUSE_MOVE)
 }
 
+//双击效果
 function toDubleClick() {
+    //移除默认双击效果
     viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(
         Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK
     )
@@ -311,6 +313,75 @@ function toDubleClick() {
     },Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK)
 }
 
+//添加农作物实体
+function cropEntity(){
+    getCrops().then((res:Crop[])=>{
+        res.forEach((item)=>{
+            const height = FARM.cropType.find((crop)=>{
+                crop.type === item.type
+            })?.height || 100
+
+            const billboardImg = FARM.cropType.find((crop) => {
+                crop.type === item.type
+            })?.img || ''
+
+            const areaColor = FARM.cropType.find((crop)=> {
+                crop.type === item.type
+            })?.color || '#ffffff'
+
+            const name = item.name.slice(0,2)
+            const areaSize = cropArea[name]
+
+            if(areaSize){
+                cropArea[name] = areaSize + item.areaSize
+            }else{
+                cropArea[name] = item.areaSize
+            }
+            
+            const areaEntity = viewer.entities.add({
+                polygon: {
+                    hierarchy: Cesium.Cartesian3.fromDegreesArray(item.area),
+                    material: new Cesium.ColorMaterialProperty(
+                        Cesium.Color.fromCssColorString(areaColor).withAlpha(0.3)
+                    )
+                }
+            })
+            areaEntity.areaColor = areaColor
+
+            viewer.entities.add({
+                position: Cesium.Cartesian3.fromDegrees(item.lon, item.lat, height - 30),
+                cylinder: {
+                    length: 30,
+                    topRadius: new Cesium.CallbackProperty(() => {
+                        const time = new Date().getTime() * 0.002
+                        return 10 + Math.abs(Math.sin(time)) * 5
+                    }, false),
+                    bottomRadius: 1.0,
+                    material: new Cesium.ColorMaterialProperty(
+                        Cesium.Color.fromCssColorString('#c8ff6f').withAlpha(0.6),
+                    ),
+                    outline: false,
+                },
+            })
+
+            const billboardEntity = viewer.entities.add({
+                position: Cesium.Cartesian3.fromDegrees(item.lon,item.lat,height),
+                billboard: {
+                    image: billboardImg,
+                    width: new Cesium.CallbackProperty(()=>{
+                        const time = new Date().getTime() * 0.002
+                        return 10 + Math.abs(Math.sin(time)) * 10
+                    },false)
+                }
+            })
+
+            billboardEntity.areaEntity = areaEntity
+            billboardEntity.cropBillboardTitle = `${item.name}(双击查看详情)`
+            billboardEntity.cropId = item.id
+        })
+    })
+}
+
 onMounted(()=>{
     viewer = initCesium('map')
 
@@ -330,6 +401,7 @@ onMounted(()=>{
   monitorModel()
   toMouseMove()
   toDubleClick()
+  cropEntity()
 })
 
 </script>
