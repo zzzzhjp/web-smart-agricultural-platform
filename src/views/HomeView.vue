@@ -95,7 +95,7 @@ import * as Cesium from 'cesium'
 import { onMounted, ref , reactive} from 'vue';
 
 //api
-import { getMonitors , getCrops } from '@/api';
+import { getMonitors , getCrops , getRoutes } from '@/api';
 
 //工具和设置
 import { 
@@ -125,7 +125,7 @@ import irrigate from '@/assets/images/irrigate.png'
 import moist from '@/assets/images/moist.png'
 import monitor from '@/assets/images/monitor.png'
 import smoke from '@/assets/images/smoke.png'
-import type { Crop, Monitor , MonitorInfo} from '@/interface';
+import type { Crop, Monitor , MonitorInfo , Route} from '@/interface';
 import router from '@/routers';
 
 
@@ -382,6 +382,91 @@ function cropEntity(){
     })
 }
 
+//无人机飞行
+function droneFlight(){
+    let droneEntity: Cesium.Entity
+    const emitterModelMatrix = new Cesium.Matrix4()
+    const translation = new Cesium.Cartesian3()
+    const rotation = new Cesium.Quaternion()
+    let hpr = new Cesium.HeadingPitchRoll()
+    const trs = new Cesium.TranslationRotationScale()
+
+    function computeEmitterModelMatrix(){
+        hpr = Cesium.HeadingPitchRoll.fromDegrees(0.0, -90.0, 0.0, hpr)
+        trs.translation = Cesium.Cartesian3.fromElements(-20.0, 0.0, -5.0, translation)
+        trs.rotation = Cesium.Quaternion.fromHeadingPitchRoll(hpr, rotation)
+        return Cesium.Matrix4.fromTranslationRotationScale(trs, emitterModelMatrix)
+    }
+
+    getRoutes().then((res: Route[]) =>{
+        const timeStepInSeconds = 10
+        const totalSeconds = timeStepInSeconds * (res.length - 1)
+        const start = Cesium.JulianDate.fromIso8601('2024-01-01T00:00:00Z')
+        const stop = Cesium.JulianDate.addSeconds(start, totalSeconds, new Cesium.JulianDate())
+
+        viewer.clock.startTime = start.clone()
+        viewer.clock.stopTime = stop.clone()
+        viewer.clock.currentTime = start.clone()
+        viewer.clock.multiplier = 5
+        viewer.clock.shouldAnimate = DRONE.isFlyOpen
+
+        const positionProperty = new Cesium.SampledPositionProperty()
+
+        for(let i = 0; i < res.length; i++){
+            const dataPotion = res[i]
+            const time = Cesium.JulianDate.addSeconds(
+                start,
+                i * timeStepInSeconds,
+                new Cesium.JulianDate()
+            )
+            const position = Cesium.Cartesian3.fromDegrees(
+                dataPotion?.longitude as number,
+                dataPotion?.latitude as number,
+                dataPotion?.height as number
+            )
+            positionProperty.addSample(time, position)
+        }
+
+        droneEntity = viewer.entities.add({
+            availability: new Cesium.TimeIntervalCollection([new Cesium.TimeInterval({ start, stop})]),
+            position: positionProperty,
+            model: {
+                uri: '/models/drone.glb',
+                scale: 15,
+                minimumPixelSize: 64,
+            },
+            orientation: new Cesium.VelocityOrientationProperty(positionProperty),
+            viewFrom: new Cesium.Cartesian3(0, -100, 100)
+        })
+    })
+
+    if(DRONE.isPesticideOpen){
+        const particleSystem = viewer.scene.primitives.add(
+            new Cesium.ParticleSystem({
+                image: smoke,
+                imageSize: new Cesium.Cartesian2(5 ,5),
+                emissionRate: 5,
+                minimumParticleLife: 3.2,
+                maximumParticleLife: 8.2,
+                minimumSpeed: 0.2,
+                maximumSpeed: 1,
+                startScale: 1,
+                endScale: 4,
+                emitter: new Cesium.CircleEmitter(2),
+                emitterModelMatrix: computeEmitterModelMatrix(),
+                lifetime: 16,
+            })
+        )
+
+        viewer.scene.preUpdate.addEventListener((Scene, time)=>{
+            if(droneEntity){
+                particleSystem.modelMatrix = droneEntity.computeModelMatrix(time, new Cesium.Matrix4())
+                particleSystem.emitterModelMatrix = computeEmitterModelMatrix()
+            }
+        })
+    }
+}
+
 onMounted(()=>{
     viewer = initCesium('map')
 
@@ -402,6 +487,7 @@ onMounted(()=>{
   toMouseMove()
   toDubleClick()
   cropEntity()
+  droneFlight()
 })
 
 </script>

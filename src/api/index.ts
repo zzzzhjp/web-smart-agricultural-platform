@@ -15,3 +15,11 @@ export const getCrops = async () => {
     }
     return res.json()
 }
+
+export const getRoutes = async () => {
+    const res = await fetch(`${host}/routes`)
+    if (!res.ok) {
+        throw new Error('error to get routes')
+    }
+    return res.json()
+}
