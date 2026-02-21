@@ -110,7 +110,7 @@ export function loadModel(
 }
 
 export const tooltip = {
-    element: null as HTMLElement | null,
+    element: null as HTMLDivElement | null,
     offsetTop: 55,
     show(x: number, y: number, text: string) {
         if (!this.element) {

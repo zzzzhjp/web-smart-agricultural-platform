@@ -126,7 +126,9 @@ import moist from '@/assets/images/moist.png'
 import monitor from '@/assets/images/monitor.png'
 import smoke from '@/assets/images/smoke.png'
 import type { Crop, Monitor , MonitorInfo , Route} from '@/interface';
-import router from '@/routers';
+
+import { useRouter } from 'vue-router';
+const router = useRouter()
 
 
 let viewer: Cesium.Viewer
@@ -317,17 +319,9 @@ function toDubleClick() {
 function cropEntity(){
     getCrops().then((res:Crop[])=>{
         res.forEach((item)=>{
-            const height = FARM.cropType.find((crop)=>{
-                crop.type === item.type
-            })?.height || 100
-
-            const billboardImg = FARM.cropType.find((crop) => {
-                crop.type === item.type
-            })?.img || ''
-
-            const areaColor = FARM.cropType.find((crop)=> {
-                crop.type === item.type
-            })?.color || '#ffffff'
+            const height = FARM.cropType.find((crop) => crop.type === item.type)?.height || 100
+            const billboardImg = FARM.cropType.find((crop) => crop.type === item.type)?.img || ''
+            const areaColor = FARM.cropType.find((crop) => crop.type === item.type)?.color || '#FFFFFF'
 
             const name = item.name.slice(0,2)
             const areaSize = cropArea[name]
@@ -371,7 +365,12 @@ function cropEntity(){
                     width: new Cesium.CallbackProperty(()=>{
                         const time = new Date().getTime() * 0.002
                         return 10 + Math.abs(Math.sin(time)) * 10
-                    },false)
+                    },false),
+                    height: new Cesium.CallbackProperty(()=>{
+                        const time = new Date().getTime() * 0.02
+                        return 10 + Math.abs(Math.sin(time))
+                    },false),
+                    scaleByDistance: new Cesium.NearFarScalar(1000, 3, 5000, 0.5)
                 }
             })
 
@@ -478,16 +477,16 @@ onMounted(()=>{
 
     mapLoaded(viewer, () => {
         loading.value = false
-  })
+    })
 
-  setWallEntity()
-  showFarmRange()
-  greenhouseModel()
-  monitorModel()
-  toMouseMove()
-  toDubleClick()
-  cropEntity()
-  droneFlight()
+    setWallEntity()
+    showFarmRange()
+    greenhouseModel()
+    monitorModel()
+    toMouseMove()
+    toDubleClick()
+    cropEntity()
+    droneFlight()
 })
 
 </script>
