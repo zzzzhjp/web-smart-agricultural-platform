@@ -117,6 +117,7 @@ import { PRODUC } from '@/configs/Product';
 //组件
 import HeaderCom from '@/components/HeaderCom.vue';
 import CropArea from '@/components/CropArea.vue';
+import ProducHistory from '@/components/ProductHistory.vue';
 
 //png
 import fence from '@/assets/images/fence.png'
@@ -457,7 +458,7 @@ function droneFlight(){
             })
         )
 
-        viewer.scene.preUpdate.addEventListener((Scene, time)=>{
+        viewer.scene.preUpdate.addEventListener((_Scene, time)=>{
             if(droneEntity){
                 particleSystem.modelMatrix = droneEntity.computeModelMatrix(time, new Cesium.Matrix4())
                 particleSystem.emitterModelMatrix = computeEmitterModelMatrix()

@@ -3,20 +3,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref , onMounted , onUnmounted } from 'vue'
+import { onMounted, onUnmounted, ref, watch, computed } from 'vue'
 import * as echarts from 'echarts'
 
 let chart: echarts.ECharts
 const cropArea = ref()
 
 const { data } = defineProps<{
-    data: Record<string, number>
+  data: Record<string, number>
 }>()
 
-const pieData = computed(()=>{
-    return Object.entries(data).map((item)=>{
-        return { value: item[1], name: item[0]}
-    })
+const pieData = computed(() => {
+  return Object.entries(data).map((item) => {
+    return { value: item[1], name: item[0] }
+  })
 })
 
 const updateChart = () => {
@@ -63,6 +63,14 @@ const updateChart = () => {
 const resizeChart = () => {
   chart?.resize()
 }
+
+watch(
+  () => data,
+  () => {
+    updateChart()
+  },
+  { deep: true },
+)
 
 onMounted(() => {
   if (cropArea.value) {
