@@ -1,5 +1,22 @@
-# Vue 3 + TypeScript + Vite
+# 三维可视化智慧农业平台
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+## 项目背景
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+随着智慧农业与数字孪生技术的发展，传统二维农业管理方式已难以满足农场精细化管理、可视化监控与决策分析的需求。本项目基于 Cesium 三维地球引擎，构建智慧农业可视化平台，对农场空间布局、农作物分布、设施设备、监控数据及无人机作业过程进行三维可视化展示，实现农业生产过程的直观呈现与辅助决策，为农业管理人员提供统一、高效的可视化管理平台。  
+
+## 技术框架
+
+Vite + Vue + TypeScript + Cesium + Element Plus + ECharts
+
+## 核心功能实现
+
++ Cesium 地球初始化及基础配置（相机、底图、光照、地形）
++ 农场视角锁定与相机角度控制
++ 点击获取经纬度坐标
++ 相机范围控制与底图 Loading 状态管理
++ 农场围墙实体绘制与区域高亮
++ 农作物区域颜色设置与交互切换
++ 温室大棚、农作物、监控设备三维模型加载
++ 监控设备提示框、数据弹窗与范围展示
++ 灌溉粒子效果、无人机飞行轨迹与喷洒动画
++ 首页与详情页多图表数据联动展示（ECharts）
